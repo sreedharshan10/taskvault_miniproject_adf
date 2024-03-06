@@ -1,0 +1,177 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText1",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "DelimitedText4",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlTable2",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "join1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "select2"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "filter2"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "union1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "derivedColumn4"
+				},
+				{
+					"name": "select3"
+				},
+				{
+					"name": "join2"
+				},
+				{
+					"name": "select4"
+				},
+				{
+					"name": "derivedColumn5"
+				},
+				{
+					"name": "derivedColumn6"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          task_id as string,",
+				"          project_id as string,",
+				"          task as string,",
+				"          assigned_to as string,",
+				"          task_deadline as date,",
+				"          status as string,",
+				"          completion_date as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source(output(",
+				"          project_id as string,",
+				"          project_name as string,",
+				"          organisation as string,",
+				"          deadline as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source2",
+				"source1, source2 join(source1@project_id == source2@project_id,",
+				"     joinType:'outer',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 select(mapColumn(",
+				"          task_id,",
+				"          project_id = source1@project_id,",
+				"          task,",
+				"          assigned_to,",
+				"          task_deadline,",
+				"          status,",
+				"          completion_date,",
+				"          project_name,",
+				"          organisation,",
+				"          deadline",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 select(mapColumn(",
+				"          task_id,",
+				"          project_id,",
+				"          task,",
+				"          assigned_to,",
+				"          task_deadline,",
+				"          status,",
+				"          completion_date,",
+				"          organisation,",
+				"          deadline",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"select2 derive(completion_date = coalesce(completion_date, toDate('1900-01-01'))) ~> derivedColumn1",
+				"derivedColumn1 filter(completion_date == toDate('1900-01-01')) ~> filter1",
+				"derivedColumn1 filter(completion_date != toDate('1900-01-01')) ~> filter2",
+				"filter2 derive(Task_left = completion_date > task_deadline) ~> derivedColumn2",
+				"filter1 derive(Task_left = status == 'deadline exceeded') ~> derivedColumn3",
+				"derivedColumn3, derivedColumn2 union(byName: true)~> union1",
+				"union1 aggregate(groupBy(project_id),",
+				"     Task_left_sum = countIf(Task_left == true(), Task_left)) ~> aggregate1",
+				"union1 derive(Days_left = deadline - currentDate()) ~> derivedColumn4",
+				"derivedColumn4 select(mapColumn(",
+				"          project_id,",
+				"          Days_left",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"aggregate1, select3 join(aggregate1@project_id == select3@project_id,",
+				"     joinType:'outer',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2",
+				"join2 select(mapColumn(",
+				"          project_id = aggregate1@project_id,",
+				"          Task_left_sum,",
+				"          Days_left",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select4",
+				"select4 derive(Project_risk_ratio = Days_left / Task_left_sum) ~> derivedColumn5",
+				"derivedColumn5 derive(Completion_status = Project_risk_ratio > 1) ~> derivedColumn6",
+				"derivedColumn6 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+			]
+		}
+	}
+}

@@ -1,0 +1,9 @@
+{
+	"name": "MiniProjectJMAN",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "1a1ba292-e1a7-465c-89f4-69b6892a16fb",
+		"tenantId": "2800c0a0-70e9-49be-8733-faeaa6aced99"
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"name": "SqlServer1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "integrated security=False;data source=miniproserver;initial catalog=miniproserver;user id=miniprojectnew",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDk2MDBGMzVGLTY4NTItNDBBRi1CREQ1LTBCQzIzQTk1Mjk2OF84ZDk2ZDY1Yy1kOTliLTQ5YjMtYmViZS04NzE5ZjM2NDliODYiDQp9"
+		}
+	}
+}
